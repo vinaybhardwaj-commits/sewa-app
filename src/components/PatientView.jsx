@@ -7,7 +7,7 @@ import { SLABar } from './SLABar';
  * Patient View Component
  * Allows patients to request services and view their requests
  */
-export const PatientView = ({ requests, onAddRequest, now }) => {
+export const PatientView = ({ requests, onAddRequest, now, roomInfo, hideToggle, onShowToast }) => {
   const [selectedHubTab, setSelectedHubTab] = useState(null);
   const [otherText, setOtherText] = useState('');
 
@@ -35,7 +35,7 @@ export const PatientView = ({ requests, onAddRequest, now }) => {
           Even Healthcare
         </h1>
         <p style={{ margin: '0 0 12px', fontSize: '14px', opacity: 0.9 }}>
-          Room 215a · Bengaluru
+          {roomInfo ? `Room ${roomInfo.room} · Bengaluru` : 'Room 215a · Bengaluru'}
         </p>
         <select
           style={{
@@ -215,6 +215,28 @@ export const PatientView = ({ requests, onAddRequest, now }) => {
           </div>
         )}
       </BottomSheet>
+
+      {/* Footer for QR mode */}
+      {hideToggle && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            maxWidth: '480px',
+            margin: '0 auto',
+            textAlign: 'center',
+            padding: '12px',
+            fontSize: '11px',
+            color: '#999',
+            background: 'white',
+            borderTop: '1px solid #e5e7eb',
+          }}
+        >
+          Powered by Sewa | Even Healthcare
+        </div>
+      )}
     </div>
   );
 };

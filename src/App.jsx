@@ -2,15 +2,25 @@ import { useState, useEffect, useCallback } from 'react';
 import { PatientView } from './components/PatientView';
 import { StaffView } from './components/StaffView';
 import { AdminView } from './components/AdminView';
+import { LocationView } from './components/LocationView';
+import { PersonView } from './components/PersonView';
+import { DeptView } from './components/DeptView';
 import { Toast } from './components/Toast';
 import { useInterval } from './hooks/useInterval';
 import { SERVICE_HUBS } from './config';
+import { ROOM_QR_MAP, LOCATION_QR_MAP, PERSON_QR_MAP, DEPT_QR_MAP } from './qrConfig';
 
 /**
  * Main App Component
  * Manages all views (Patient, Staff, Admin) and shared state
  */
 function App() {
+  // QR routing state
+  const [qrType, setQrType] = useState(null);
+  const [qrId, setQrId] = useState(null);
+  const [qrConfig, setQrConfig] = useState(null);
+  const [isInvalidQR, setIsInvalidQR] = useState(false);
+
   // View state
   const [currentView, setCurrentView] = useState('patient');
 
@@ -23,6 +33,49 @@ function App() {
 
   // Time ticker for SLA updates
   const [now, setNow] = useState(new Date());
+
+  // Parse URL parameters for QR routing
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get('type');
+    const id = params.get('id');
+
+    if (type && id) {
+      setQrType(type);
+      setQrId(id);
+
+      // Load appropriate config
+      let config = null;
+      let isValid = true;
+
+      switch (type) {
+        case 'room':
+          config = ROOM_QR_MAP[id];
+          if (!config) isValid = false;
+          break;
+        case 'location':
+          config = LOCATION_QR_MAP[id];
+          if (!config) isValid = false;
+          break;
+        case 'person':
+          config = PERSON_QR_MAP[id];
+          if (!config) isValid = false;
+          break;
+        case 'dept':
+          config = DEPT_QR_MAP[id];
+          if (!config) isValid = false;
+          break;
+        default:
+          isValid = false;
+      }
+
+      if (!isValid) {
+        setIsInvalidQR(true);
+      } else {
+        setQrConfig(config);
+      }
+    }
+  }, []);
 
   // Initialize with demo requests
   useEffect(() => {
@@ -170,6 +223,170 @@ function App() {
     [showToast]
   );
 
+  // Invalid QR code error page
+  if (isInvalidQR) {
+    return (
+      <div
+        style={{
+          maxWidth: '480px',
+          margin: '0 auto',
+          background: '#fff',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+          textAlign: 'center',
+          fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        }}
+      >
+        <div style={{ fontSize: '64px', marginBottom: '16px' }}>❌</div>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px' }}>
+          Invalid QR Code
+        </h1>
+        <p style={{ fontSize: '14px', color: '#666', marginBottom: '24px' }}>
+          The QR code you scanned is not recognized. Please contact support or scan a valid code.
+        </p>
+        <button
+          onClick={() => {
+            window.location.href = window.location.origin;
+          }}
+          style={{
+            padding: '12px 24px',
+            background: '#1a6bf0',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+          }}
+        >
+          Back to Home
+        </button>
+        <div
+          style={{
+            marginTop: '32px',
+            fontSize: '12px',
+            color: '#999',
+          }}
+        >
+          Powered by Sewa | Even Healthcare
+        </div>
+      </div>
+    );
+  }
+
+  // QR-based routing
+  if (qrType === 'room' && qrConfig) {
+    return (
+      <div
+        style={{
+          maxWidth: '480px',
+          margin: '0 auto',
+          background: '#fff',
+          minHeight: '100vh',
+          position: 'relative',
+          fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          fontSize: '16px',
+          lineHeight: '1.5',
+        }}
+      >
+        <PatientView
+          requests={requests}
+          onAddRequest={submitRequest}
+          now={now}
+          roomInfo={qrConfig}
+          hideToggle={true}
+          onShowToast={showToast}
+        />
+        {toast && (
+          <Toast
+            message={toast}
+            onDismiss={() => setToast(null)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  if (qrType === 'location' && qrConfig) {
+    return (
+      <div
+        style={{
+          maxWidth: '480px',
+          margin: '0 auto',
+          background: '#fff',
+          minHeight: '100vh',
+          position: 'relative',
+          fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          fontSize: '16px',
+          lineHeight: '1.5',
+        }}
+      >
+        <LocationView config={qrConfig} onShowToast={showToast} />
+        {toast && (
+          <Toast
+            message={toast}
+            onDismiss={() => setToast(null)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  if (qrType === 'person' && qrConfig) {
+    return (
+      <div
+        style={{
+          maxWidth: '480px',
+          margin: '0 auto',
+          background: '#fff',
+          minHeight: '100vh',
+          position: 'relative',
+          fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          fontSize: '16px',
+          lineHeight: '1.5',
+        }}
+      >
+        <PersonView config={qrConfig} onShowToast={showToast} />
+        {toast && (
+          <Toast
+            message={toast}
+            onDismiss={() => setToast(null)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  if (qrType === 'dept' && qrConfig) {
+    return (
+      <div
+        style={{
+          maxWidth: '480px',
+          margin: '0 auto',
+          background: '#fff',
+          minHeight: '100vh',
+          position: 'relative',
+          fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          fontSize: '16px',
+          lineHeight: '1.5',
+        }}
+      >
+        <DeptView config={qrConfig} onShowToast={showToast} />
+        {toast && (
+          <Toast
+            message={toast}
+            onDismiss={() => setToast(null)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Default view with toggle (no QR)
   return (
     <div
       style={{

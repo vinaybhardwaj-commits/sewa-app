@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { SERVICE_HUBS, STAFF_DIRECTORY, SLA_LEVELS, NOTIFICATION_CHANNELS } from '../config';
+import { QRGenerator } from './QRGenerator';
 
 /**
  * Admin View Component
@@ -197,7 +198,7 @@ export const AdminView = () => {
         </h1>
 
         <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', fontSize: '12px' }}>
-          {['routing', 'staff', 'sla', 'notifications'].map((tab) => (
+          {['routing', 'staff', 'sla', 'notifications', 'qrcodes'].map((tab) => (
             <button
               key={tab}
               onClick={() => setAdminTab(tab)}
@@ -212,7 +213,7 @@ export const AdminView = () => {
                 whiteSpace: 'nowrap',
               }}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'qrcodes' ? 'QR Codes' : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
         </div>
@@ -223,6 +224,7 @@ export const AdminView = () => {
       {adminTab === 'staff' && <StaffTab />}
       {adminTab === 'sla' && <SLATab />}
       {adminTab === 'notifications' && <NotificationsTab />}
+      {adminTab === 'qrcodes' && <QRGenerator />}
     </div>
   );
 };
